@@ -1,0 +1,50 @@
+# Azure Pipelines to run Terraform for `kube-lab-aks-azure-tf`
+# Requirements: set pipeline variables `armClientId`, `armClientSecret`, `armTenantId`, `armSubscriptionId`.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  TF_VERSION: '1.5.7'
+  TF_WORKING_DIR: 'kube-lab-aks-azure-tf'
+  apply: 'false' # set to 'true' to enable the apply step
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- checkout: self
+
+- task: HashiCorp/setup-terraform@v1
+  displayName: 'Setup Terraform'
+  inputs:
+    terraform_version: $(TF_VERSION)
+
+- script: |
+    cd $(TF_WORKING_DIR)
+    terraform init
+    terraform plan -out=tfplan
+  displayName: 'Terraform Init & Plan'
+  env:
+    ARM_CLIENT_ID: $(armClientId)
+    ARM_CLIENT_SECRET: $(armClientSecret)
+    ARM_TENANT_ID: $(armTenantId)
+    ARM_SUBSCRIPTION_ID: $(armSubscriptionId)
+
+- script: |
+    cd $(TF_WORKING_DIR)
+    terraform apply -auto-approve tfplan
+  displayName: 'Terraform Apply (optional)'
+  condition: eq(variables['apply'], 'true')
+  env:
+    ARM_CLIENT_ID: $(armClientId)
+    ARM_CLIENT_SECRET: $(armClientSecret)
+    ARM_TENANT_ID: $(armTenantId)
+    ARM_SUBSCRIPTION_ID: $(armSubscriptionId)
