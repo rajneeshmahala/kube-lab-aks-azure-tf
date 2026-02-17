@@ -22,7 +22,7 @@ pool:
 steps:
 - checkout: self
 
-- task: HashiCorp/setup-terraform@v1
+- task: hashicorp.setup-terraform@1
   displayName: 'Setup Terraform'
   inputs:
     terraform_version: $(TF_VERSION)
