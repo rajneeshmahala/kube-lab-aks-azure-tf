@@ -22,10 +22,17 @@ pool:
 steps:
 - checkout: self
 
-- task: hashicorp.setup-terraform@1
-  displayName: 'Setup Terraform'
-  inputs:
-    terraform_version: $(TF_VERSION)
+ - script: |
+    echo "Installing Terraform $(TF_VERSION)"
+    if ! command -v terraform >/dev/null 2>&1; then
+      wget https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip -O /tmp/terraform.zip
+      unzip -o /tmp/terraform.zip -d /tmp
+      sudo mv /tmp/terraform /usr/local/bin/
+      terraform -v
+    else
+      echo "terraform already installed: $(terraform -v | head -n1)"
+    fi
+  displayName: 'Install Terraform (inline)'
 
 - script: |
     cd $(TF_WORKING_DIR)
